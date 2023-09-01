@@ -143,10 +143,10 @@
       const formData = new FormData(document.querySelector('form'));
       formData.set('tags', currentContact.tags.join(','));
 
-      const qs = new URLSearchParams(formData).toString();
+      const reqBody = new URLSearchParams(formData).toString();
 
       try {
-        let submitted = this.model.submitContact(qs);
+        let submitted = await this.model.submitContact(reqBody);
         let contacts = await this.model.fetchContacts();
 
         if (!submitted) {
