@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <link rel="stylesheet" href="stylesheets/styles.css">
+  <script src="/javascripts/jquery.js"></script>
+  <script src="/javascripts/handlebars.js"></script>
+  <script src="/javascripts/app.js" type="application/javascript"></script>
+</head>
+<body>
+  <header>
+    <h1>Contact Manager</h1>
+    <p>This is a practice project...</p>
+  </header>
+  <main>
+    <!--Main UI goes here-->
+  </main>
+  <footer>
+    Develped by: <a href="https://www.github.com/brandoncorey" target=_blank>Brandon Corey</a>
+  </footer>
+</body>
+<script id="add-contact-template" type="text/x-handlebars">
+  <div id="add-contact">
+    <h2>Contact info</h2>
+    <form action="/api/contacts" method="post" novalidate>
+      <div>
+        <label for="full-name">Full name:</label>
+        <input required id="full-name" name="full_name" type="text" value="{{full_name}}">
+        <span class="hide">Please enter a name.</span>
+      </div>
+      <div>
+        <label for="email-address">Email address:</label>
+        <input required id="email-address" name="email" type="email" value="{{email}}">
+        <span class="hide">Please enter an email.</span>
+      </div>
+      <div>
+        <label for="phone-number">Telephone number:</label>
+        <input required id="phone-number" name="phone_number" type="tel" value="{{phone_number}}">
+        <span class="hide">Please enter a phone number.</span>
+      </div>
+      <div>
+        <label for="tags">Tags:</label>
+        <input id="tags" name="tags" type="text" placeholder="Press enter to add new tag.">
+        <span class="hide">Please enter a tag(s).</span>
+        <ul class="tags-section">
+          {{#each tags}}
+          <li id="{{this}}" class="tag">
+            <button>{{this}}</button>
+          </li>
+          {{/each}}
+        </ul>
+      </div>
+      <fieldset>
+        <button class="btn" type="submit">Submit</button>
+        <button class="btn" id='cancel'>Cancel</button>
+      </fieldset>
+    </form>
+  </div>
+</script>
+<script id="tool-bar-template" type="text/x-handlebars">
+  <div id="tool-bar" class="container">
+    <a href="/contacts/new" class="btn" id="add">Add Contact</a>
+    <input type="text" name="search" id="search" placeholder="search">
+  </div>
+</script>
+
+<script id="contacts-template" type="text/x-handlebars">
+  <div class="contacts">
+    {{#unless contacts}}
+    <div id="no-contacts" class="container">
+      <h3>There are no contacts.</h3>
+      <a href="/contacts/new" class="btn" id="add">Add Contact</a>
+    </div>
+    {{else}}
+
+      {{#each contacts}}
+      <div class="contact" data-id={{id}} data-full_name="{{full_name}}">
+      <dl>
+        <dt>{{full_name}}</dt>
+        <dt>Phone Number:</dt>
+        <dd>{{phone_number}}</dd>
+        <dt>Email:</dt>
+        <dd>{{email}}</dd>
+        <dt>Tags:</dt>
+        <dd>
+          <ul class="tags-section">
+            {{#each tags}}
+            <li id="{{this}}" class="tag">
+              <button>{{this}}</button>
+            </li>
+            {{/each}}
+          </ul>
+        </dd>
+      </dl>
+      <fieldset>
+        <a href="/contacts/{{id}}/edit/" class="btn" id="edit">Edit</a>
+        <a href="/contacts/{{id}}/delete/" class="btn" id="delete">Delete</a>
+      </fieldset>
+    </div>
+      {{/each}}
+      {{/unless}}
+    </div>
+</script>
+</html>
