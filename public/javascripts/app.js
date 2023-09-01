@@ -1,93 +1,199 @@
 (() => {
-  class ContactManager {
-    constructor() {
-      this.contacts = [];
-      this.resetCurrentContact();
-      this.currentTagFilters = [];
-      this.displayMainUI();
+
+  class Controller {
+    constructor(model, view) {
+      this.model = model;
+      this.view = view;
       this.bind();
     }
-  
-    // Controller
+
     bind() {
-      document.querySelector('main').addEventListener('click', this.handleAddContact.bind(this));
-      document.querySelector('main').addEventListener('click', this.handleCancel.bind(this));
+      document.addEventListener('click', this.handleContactActions.bind(this));
       document.addEventListener('submit', this.handleSubmission.bind(this));
-      document.addEventListener('click', this.handleDelete.bind(this));
-      document.addEventListener('click', this.handleEdit.bind(this));
       document.addEventListener('keyup', this.handleSearch.bind(this));
-      document.addEventListener('click', this.handleToggleTag.bind(this));
+      document.addEventListener('click', this.handleTagActions.bind(this));
       document.addEventListener('keydown', this.handleAddTag.bind(this));
-      document.addEventListener('click', this.handleFilterTags.bind(this))
     }
 
-    async handleDelete(event) {
-      if (event.target.id !== 'delete') return;
+    // Aggregated handlers
+    handleContactActions(event) {
+      if (event.target.id === 'add') this.handleAddContact(event);
+      else if (event.target.id === 'delete') this.handleDeleteContact(event);
+      else if (event.target.id === 'edit') this.handleEditContact(event);
+      else if (event.target.id === 'cancel') this.handleCancelContact(event);
+    }
+
+    handleTagActions(event) {
+      if (event.target.closest('.tag') && event.target.closest('.contact')) this.handleFilterTags(event);
+      else if (event.target.closest('.tag') && !event.target.closest('.contact')) this.handleToggleTag(event);
+    }
+
+    // Other handlers
+    handleAddContact(event) {
       event.preventDefault();
-  
+      this.view.hideMainUI();
+      this.view.renderAddContact(this.model.getContacts(), this.model.getCurrentContact());
+    }
+
+    handleAddTag(event) {
+      if (event.target.id !== 'tags') return;
+
+      let tagName = event.target.value;
+      let currentContact = this.model.getCurrentContact();
+
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        currentContact.tags.push(tagName);
+
+        this.view.renderAddTag(tagName);
+        event.target.value = '';
+      }
+    }
+
+    async handleCancelContact(event) {
+      event.preventDefault();
+      this.view.hideAddContact();
+
+      try {
+        let contacts = await this.model.fetchContacts();
+        if (!contacts) throw new Error(`Contact could not be deleted: REASON --> ${error.message}`);
+
+        this.model.resetCurrentContact();
+        this.view.displayMainUI(contacts);
+      } catch (error) {
+        console.log(error.message);
+      }
+    }
+
+    async handleDeleteContact(event) {
+
+      event.preventDefault();
+
       let answer = window.confirm('Are you sure you want to delete this user?');
       if (!answer) return;
-  
       let contactId = event.target.closest('.contact').dataset.id;
-      this.deleteContact(contactId);
-    }
-  
-    async handleEdit(event) {
-      if (event.target.id !== 'edit') return;
-      event.preventDefault();
-  
-      let contactId = event.target.closest('.contact').dataset.id;
-      this.hideMainUI();
-  
-      this.currentContact = this.processContacts([await this.fetchContact(contactId)])[0];
-      this.renderAddContact();
-    }
-  
-    handleAddContact(event) {
-      if (event.target.id === 'add') {
-        event.preventDefault();
-  
-        this.hideMainUI();
-        this.renderAddContact();
-      }
-    }
-  
-    handleCancel(event) {
-      if (event.target.id === 'cancel') {
-        event.preventDefault();
-        this.hideAddContact();
-        this.displayMainUI();
-      }
-    }
-  
-    handleSubmission(event) {
-      event.preventDefault();
-  
-      const invalid = this.invalidInputs(event);
-       if (invalid.length > 0) {
-        this.displayError(invalid);
-        return;
-       };
+      try {
+        let deleted = await this.model.deleteContact(contactId);
+        let contacts = await this.model.fetchContacts();
 
-      const formData = new FormData(document.querySelector('form'));
-      formData.set('tags', this.currentContact.tags.join(','));
-  
-      const qs = new URLSearchParams(formData).toString();
-  
-      this.submitContact(qs);
+        if (!deleted) {
+          throw new Error(`Contact could not be deleted: REASON --> ${error.message}`);
+        } else {
+          this.view.hideMainUI();
+          this.view.displayMainUI(contacts);
+        }
+      } catch (error) {
+        console.log(error.message);
+      }
     }
-  
+
+    async handleEditContact(event) {
+      event.preventDefault();
+
+      let contactId = event.target.closest('.contact').dataset.id;
+      this.view.hideMainUI();
+
+      let currentContact = await this.model.fetchContact(contactId);
+
+      this.view.renderAddContact(this.model.getContacts(), currentContact);
+    }
+
+    handleFilterTags(event) {
+      const tag = event.target.closest('.tag');
+      if (!tag || !event.target.closest('.contact')) return;
+
+      this.model.addTagFilter(tag);
+
+      let currentTagFilters = this.model.getCurrentTagFilters();
+      this.view.updateTagColors(currentTagFilters);
+      this.view.filterContactsByTags(currentTagFilters);
+    }
+
+    invalidInputs(event) {
+      const form = event.target;
+      const inputs = Array.from(form.querySelectorAll('form input'));
+      const tags = Array.from(form.querySelectorAll('.selected-tag'));
+
+      if (tags.length > 0) this.removeTagValidation(inputs);
+
+      let invalids = Array.from(inputs).filter(input => input.value.length === 0);
+      return invalids;
+    }
+
+    handleSearch(event) {
+      if (event.target.id !== 'search') return;
+
+      let contacts = document.querySelectorAll('.contact');
+      Array.from(contacts).forEach(contact => {
+        let validName = this.view.isSearchedFor(contact);
+        this.view.hideContact(contact, !validName);
+      });
+    }
+
+    async handleSubmission(event) {
+      event.preventDefault();
+
+      const invalid = this.invalidInputs(event);
+      if (invalid.length > 0) {
+        this.view.displayError(invalid);
+        return;
+      };
+
+      const currentContact = this.model.getCurrentContact();
+      const formData = new FormData(document.querySelector('form'));
+      formData.set('tags', currentContact.tags.join(','));
+
+      const qs = new URLSearchParams(formData).toString();
+
+      try {
+        let submitted = this.model.submitContact(qs);
+        let contacts = await this.model.fetchContacts();
+
+        if (!submitted) {
+          throw new Error(`Contact could not be saved: REASON --> ${error.message}`);
+        } else {
+          this.view.hideAddContact();
+          this.view.displayMainUI(contacts);
+          this.model.resetCurrentContact();
+        }
+      } catch (error) {
+        console.log(error.message);
+      }
+    }
+
+    removeTagValidation(inputs) {
+      const form = document.querySelector('form');
+      inputs.splice(inputs.indexOf(form.querySelector('#tags')));
+    }
+
     handleToggleTag(event) {
       let tag = event.target.closest('.tag');
+      let currentContact = this.model.getCurrentContact();
 
-      if (!tag || !this.currentContact) return;
+      if (!tag || !currentContact) return;
 
       event.preventDefault();
 
       if (event.pointerId === -1) return;
-      let added = this.addTagToContact(tag, this.currentContact.tags.includes(tag.id))
+      let added = this.model.addTagToContact(tag, currentContact.tags.includes(tag.id))
 
-      this.toggleTagColor(tag, added);
+      this.view.toggleTagColor(tag, added);
+    }
+  }
+
+  class Model {
+    constructor() {
+      this.contacts = [];
+      this.resetCurrentContact();
+      this.currentTagFilters = [];
+    }
+
+    addTagFilter(tag) {
+      const tagId = tag.id;
+      const index = this.currentTagFilters.indexOf(tagId);
+
+      if (index === -1) this.currentTagFilters.push(tagId);
+      else this.currentTagFilters.splice(index, 1);
     }
 
     addTagToContact(tag, condition) {
@@ -100,94 +206,36 @@
       }
     }
 
-    handleAddTag(event) {
-      if (event.target.id !== 'tags') return;
-      let tagName = event.target.value;
-
-      if (event.key === 'Enter') {
-        this.currentContact.tags.push(tagName);
-        this.renderAddTag(tagName);
-        event.target.value = '';
-      }
+    async deleteContact(contactId) {
+      return fetch(`/api/contacts/${contactId}`, { method: 'DELETE' })
+        .then(res => res.ok ? true : false)
+        .catch(error => error);
     }
 
-    handleSearch(event) {
-      if (event.target.id !== 'search') return;
-
-      let contacts = document.querySelectorAll('.contact');
-      Array.from(contacts).forEach(contact => {
-        let validName = this.isSearchedFor(contact);
-        this.hideContact(contact, !validName);
-      })
+    async fetchContact(contactId) {
+      return fetch(`/api/contacts/${contactId}`, { method: 'GET' })
+        .then(res => res.json())
+        .then(contact => this.currentContact = this.processContacts([contact])[0])
+        .catch((error) => new Error(`Contact could not be fetched: REASON --> ${error.message}`));
     }
-
-    handleFilterTags(event) {
-      const tag = event.target.closest('.tag');
-
-      if (!tag || !event.target.closest('.contact')) return;
-
-      this.addTagFilter(tag);
-      this.updateTagColors();
-      this.filterContactsByTags();
-    }
-    // Model
 
     async fetchContacts() {
-      return fetch('/api/contacts', { method: 'GET'})
-              .then(res => res.json())
-              .then(contacts => { 
-                this.contacts = this.processContacts(contacts);
-              })
-              .catch(error => new Error(error.message));
-    }
-  
-    async fetchContact(contactId) { 
-      return fetch(`/api/contacts/${contactId}`, { method: 'GET' })
-               .then(res => res.json())
-               .then(contact => contact)
-               .catch(error => new Error(error));
+      return fetch('/api/contacts', { method: 'GET' })
+        .then(res => res.json())
+        .then(contacts => this.contacts = this.processContacts(contacts))
+        .catch((error) => new Error(`Contacts could not be fetched: REASON --> ${error.message}`));
     }
 
-    async submitContact(qs) {
-      let path;
-      let method;
-  
-      if (this.currentContact.id) {
-        path = `/api/contacts/${this.currentContact.id}`;
-        method = 'PUT'
-      } else {
-        path = '/api/contacts';
-        method = 'POST';
-      }
-  
-      fetch(path, {
-        method,
-        body: qs,
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-      }).then(res => res.ok ? console.log('Saved!') : console.log('Failed'))
-        .then(_ => {
-          this.hideAddContact();
-          this.displayMainUI();
-        })
-        .then(_ => this.resetCurrentContact())
-        .catch(err => new Error(err.message));
+    getContacts() {
+      return this.contacts;
     }
 
-    async deleteContact(contactId) {
-      fetch(`/api/contacts/${contactId}`, { method: 'DELETE' })
-        .then(res => res.ok ? console.log('Deleted!') : console.log('Could not delete.'))
-        .then(_ => {
-          this.hideMainUI();
-          this.displayMainUI()
-        })
-        .catch(error => new Error(error.message));
+    getCurrentContact() {
+      return this.currentContact;
     }
 
-    getTags() {
-      let tags = this.contacts.reduce((arr, contact) => arr.concat(contact.tags), []);
-      return tags.filter((tag, idx) => tags.indexOf(tag) === idx);
+    getCurrentTagFilters() {
+      return this.currentTagFilters;
     }
 
     processContacts(contacts) {
@@ -203,99 +251,89 @@
     }
 
     resetCurrentContact() {
-      this.currentContact = {tags: []}
+      this.currentContact = { tags: [] }
     }
 
-    addTagFilter(tag) {
-      const tagId = tag.id;
-      const index = this.currentTagFilters.indexOf(tagId);
+    async submitContact(qs) {
+      let path;
+      let method;
 
-      if (index === -1) this.currentTagFilters.push(tagId);
-      else this.currentTagFilters.splice(index, 1);
+      if (this.currentContact.id) {
+        path = `/api/contacts/${this.currentContact.id}`;
+        method = 'PUT'
+      } else {
+        path = '/api/contacts';
+        method = 'POST';
+      }
+
+      return fetch(path, {
+        method,
+        body: qs,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+      }).catch(res => res.ok ? true : false)
+        .then(error => error);
+    }
+  }
+
+  class View {
+    constructor(contacts) {
+      this.displayMainUI(contacts);
     }
 
-    // View
-  
-    renderToolBar() {
-      const toolBar = document.querySelector('#tool-bar-template').innerHTML;
-      const destination = document.querySelector('main');
-      destination.insertAdjacentHTML('afterbegin', toolBar);
-    }
-  
-    async renderContacts() {
-      await this.fetchContacts();
-      const contacts =  document.querySelector('.contacts');
-  
-      if (contacts) contacts.remove();
-  
-      const contactsHTML = document.querySelector('#contacts-template').innerHTML;
-      const destination = document.querySelector('#tool-bar');
-      const contactsPreComp = Handlebars.compile(contactsHTML);
-      const contactsComp = contactsPreComp({ contacts: this.contacts });
-      this.searchContacts = null;
-    
-      destination.insertAdjacentHTML('afterend', contactsComp);
-      return true;
-    }
-  
-    renderAddContact() {
-      const addContact = document.querySelector('#add-contact-template').innerHTML;
-      const destination = document.querySelector('main');
-      const addContactPreComp = Handlebars.compile(addContact);
-      let allTags = this.getTags();
-
-      let contactCopy = JSON.parse(JSON.stringify(this.currentContact));
-
-      contactCopy.tags = allTags;
-
-      const addContactComp = addContactPreComp(contactCopy)
-      destination.insertAdjacentHTML('beforeend', addContactComp);
-
-      this.highlightCurrentTags();
+    displayMainUI(contacts) {
+      this.renderToolBar();
+      this.renderContacts(contacts);
     }
 
-    highlightCurrentTags() {
-      const tags = document.querySelectorAll('.tags-section li');
- 
-      Array.from(tags).forEach(tag => {
-        if (this.currentContact.tags.includes(tag.id)) {
-          tag.classList.add('selected-tag');
-        }
+    displayError(errorInputs) {
+      const inputs = document.querySelectorAll('form input');
+
+      inputs.forEach(input => {
+        const errorMessage = input.closest('span') || input.nextElementSibling;
+        errorMessage.classList.toggle('hide', !errorInputs.includes(input));
+        input.classList.toggle('invalid-border', errorInputs.includes(input));
       });
     }
 
-    renderAddTag(tagName) {
-      let tag = document.createElement('li');
-      let button = document.createElement('button');
-      this.toggleTagColor(tag, true);
-      tag.id = tagName;
-      tag.textContent = tagName;
-      tag.appendChild(button);
-
-      document.querySelector('.tags-section').appendChild(tag);
-    }
-
-    toggleTagColor(tag, condition) {
-      tag.classList.toggle('selected-tag', condition);
-    }
-
-    updateTagColors() {
-      const allTags = document.querySelectorAll('.contacts .tag');
-
-      allTags.forEach(tag => {
-        const tagId = tag.id;
-        const isActive = this.currentTagFilters.includes(tagId);
-        this.toggleTagColor(tag, isActive);
-      });
-    }
-
-    filterContactsByTags() {
+    filterContactsByTags(currentTagFilters) {
       const contacts = document.querySelectorAll('.contact');
 
       contacts.forEach(contact => {
         const contactTags = Array.from(contact.querySelectorAll('.tag')).map(tag => tag.id);
-        const isVisible = this.currentTagFilters.every(tag => contactTags.includes(tag)) && this.isSearchedFor(contact);
+        const isVisible = currentTagFilters.every(tag => contactTags.includes(tag)) && this.isSearchedFor(contact);
         contact.classList.toggle('hide', !isVisible);
+      });
+    }
+
+    getTags(contacts) {
+      let tags = contacts.reduce((arr, contact) => arr.concat(contact.tags), []);
+      return tags.filter((tag, idx) => tags.indexOf(tag) === idx);
+    }
+
+    hideAddContact() {
+      document.querySelector('#add-contact').remove();
+    }
+
+    hideContact(contact, condition) {
+      if (condition) contact.classList.add('hide');
+      else contact.classList.remove('hide');
+    }
+
+    hideMainUI() {
+      Array.from(document.querySelectorAll('#tool-bar, .contacts'))
+        .forEach(component => {
+          component.remove();
+        });
+    }
+
+    highlightCurrentTags(currentContact) {
+      const tags = document.querySelectorAll('.tags-section li');
+      Array.from(tags).forEach(tag => {
+        if (currentContact.tags.includes(tag.id)) {
+          tag.classList.add('selected-tag');
+        }
       });
     }
 
@@ -304,65 +342,83 @@
       return contact.dataset.full_name.toLowerCase().startsWith(search.toLowerCase());
     }
 
-    hideContact(contact, condition) {
-      if (condition) contact.classList.add('hide');
-      else contact.classList.remove('hide');
-    }
-  
-    hideAddContact() {
-      document.querySelector('#add-contact').remove();
-    }
-  
-    hideMainUI() {
-      Array.from(document.querySelectorAll('#tool-bar, .contacts'))
-           .forEach(component => {
-            component.remove();
-           });
+    renderAddContact(contacts, currentContact) {
+      const addContact = document.querySelector('#add-contact-template').innerHTML;
+      const destination = document.querySelector('main');
+      const addContactPreComp = Handlebars.compile(addContact);
+      let allTags = this.getTags(contacts);
+
+      let contactCopy = JSON.parse(JSON.stringify(currentContact));
+
+      contactCopy.tags = allTags;
+
+      const addContactComp = addContactPreComp(contactCopy)
+      destination.insertAdjacentHTML('beforeend', addContactComp);
+
+      this.highlightCurrentTags(currentContact);
     }
 
-    displayMainUI() {
-      this.renderToolBar();
-      this.renderContacts();
-    }
-  
-    invalidInputs(event) {
-      const form = event.target;
-      const inputs = Array.from(form.querySelectorAll('form input'));
-      const tags = Array.from(form.querySelectorAll('.selected-tag'));
-   
-      if (tags.length > 0) this.removeTagValidation(inputs);
-   
-      let invalids = Array.from(inputs).filter(input => input.value.length === 0);
-      return invalids;
+
+    renderAddTag(tagName) {
+      let tag = document.createElement('li');
+      let button = document.createElement('button');
+      this.toggleTagColor(tag, true);
+      tag.id = tagName;
+      tag.textContent = tagName;
+      tag.classList.add('tag');
+
+      tag.appendChild(button);
+
+      document.querySelector('.tags-section').appendChild(tag);
     }
 
-    removeTagValidation(inputs) {
-      const form = document.querySelector('form');
-      inputs.splice(inputs.indexOf(form.querySelector('#tags'))); 
+    async renderContacts(contactsData) {
+      const contacts = document.querySelector('.contacts');
+
+      if (contacts) contacts.remove();
+
+      const contactsHTML = document.querySelector('#contacts-template').innerHTML;
+      const destination = document.querySelector('#tool-bar');
+      const contactsPreComp = Handlebars.compile(contactsHTML);
+      const contactsComp = contactsPreComp({ contacts: contactsData });
+
+      destination.insertAdjacentHTML('afterend', contactsComp);
+      return true;
     }
-  
-    displayError(errorInputs) {
-      const inputs = document.querySelectorAll('form input');
-    
-      inputs.forEach(input => {
-        const errorMessage = input.closest('span') || input.nextElementSibling;
-        errorMessage.classList.toggle('hide', !errorInputs.includes(input));
-        input.classList.toggle('invalid-border', errorInputs.includes(input));
+
+    renderToolBar() {
+      const toolBar = document.querySelector('#tool-bar-template').innerHTML;
+      const destination = document.querySelector('main');
+      destination.insertAdjacentHTML('afterbegin', toolBar);
+    }
+
+    toggleTagColor(tag, condition) {
+      tag.classList.toggle('selected-tag', condition);
+    }
+
+    updateTagColors(currentTagFilters) {
+      const allTags = document.querySelectorAll('.contacts .tag');
+
+      allTags.forEach(tag => {
+        const tagId = tag.id;
+        const isActive = currentTagFilters.includes(tagId);
+        this.toggleTagColor(tag, isActive);
       });
     }
   }
 
-  class Controller {
-    constructor(model, view) {
-      this.model = model;
-      this.view = view;
+  class App {
+    init() {
+      document.addEventListener('DOMContentLoaded', async () => {
+        const model = new Model();
+        await model.fetchContacts();
+        const view = new View(model.getContacts());
+        new Controller(model, view);
+      });
     }
-
-    
   }
-  
-  
-  document.addEventListener('DOMContentLoaded', event => {
-    new ContactManager();
-  });
+
+  const app = new App();
+  app.init()
+
 })();

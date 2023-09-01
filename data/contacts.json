@@ -4,7 +4,7 @@
     "full_name": "Naveed Fida",
     "email": "navida@gmail.com",
     "phone_number": "508-121-1123",
-    "tags": "work,friend"
+    "tags": "work"
   },
   {
     "id": 3,
@@ -12,12 +12,5 @@
     "email": "ph@example.com",
     "phone_number": "54321098761",
     "tags": "work"
-  },
-  {
-    "full_name": "Brandon Mitchell Corey",
-    "phone_number": "5088081106",
-    "email": "bcorey3660@gmail.com",
-    "tags": "netag",
-    "id": 4
   }
 ]
