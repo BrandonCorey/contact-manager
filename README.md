@@ -1,8 +1,9 @@
 # Contact Manager
 ### This is a fullstack app built with Node, Express, and HandleBars
 - While there is a node server with a RESTful API, the main focus of this project was frontend DOM manipulation
-- I used the MVC pattern to modularize my code and separate concerns of state management, rendering, and event handling
+- The MVC pattern is used on the frontend to modularize code and separate concerns of state management, rendering, and event handling
 - There are **no frontend frameworks used here**, only HandleBarsJS and vanilla JS
+- **apidoc** is used to create the API reference for the express server
 
 ## Functionality
 You can perform CRUD operations via the API endpoints set up within the Node server
