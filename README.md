@@ -24,9 +24,14 @@ You can perform CRUD operations via the API endpoints set up within the Node ser
  
 **To get started**
 ```
+npm clone https://github.com/BrandonCorey/contact-manager.git
+```
+```
 npm install
 ```
-
+```
+npm start
+```
 Because there is currently no dedicated database, you do not need to configure one
 - This is for demo purposes
 

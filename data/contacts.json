@@ -11,13 +11,13 @@
     "full_name": "Pete Hanson",
     "email": "ph@example.com",
     "phone_number": "54321098761",
-    "tags": "ta,Launch School"
+    "tags": "Launch School,TA"
   },
   {
     "full_name": "Brandon Mitchell Corey",
-    "phone_number": "5088081106",
+    "phone_number": "123456789",
     "email": "bcorey3660@gmail.com",
-    "tags": "me,Launch School",
+    "tags": "Launch School",
     "id": 4
   }
 ]
