@@ -6,46 +6,56 @@ export default class Controller {
   }
 
   bind() {
-    document.addEventListener('click', this.handleContactActions.bind(this));
-    document.addEventListener('submit', this.handleSubmission.bind(this));
-    document.addEventListener('keyup', this.handleSearch.bind(this));
-    document.addEventListener('click', this.handleTagActions.bind(this));
-    document.addEventListener('keydown', this.handleAddTag.bind(this));
+    document.addEventListener("click", this.handleContactActions.bind(this));
+    document.addEventListener("submit", this.handleSubmission.bind(this));
+    document.addEventListener("keyup", this.handleSearch.bind(this));
+    document.addEventListener("click", this.handleTagActions.bind(this));
+    document.addEventListener("keydown", this.handleAddTag.bind(this));
   }
 
   // Aggregated handlers
   handleContactActions(event) {
-    if (event.target.id === 'add') this.handleAddContact(event);
-    else if (event.target.id === 'delete') this.handleDeleteContact(event);
-    else if (event.target.id === 'edit') this.handleEditContact(event);
-    else if (event.target.id === 'cancel') this.handleCancelContact(event);
+    if (event.target.id === "add") this.handleAddContact(event);
+    else if (event.target.id === "delete") this.handleDeleteContact(event);
+    else if (event.target.id === "edit") this.handleEditContact(event);
+    else if (event.target.id === "cancel") this.handleCancelContact(event);
   }
 
   handleTagActions(event) {
-    if (event.target.closest('.tag') && event.target.closest('.contact')) this.handleFilterTags(event);
-    else if (event.target.closest('.tag') && !event.target.closest('.contact')) this.handleToggleTag(event);
+    if (event.target.closest(".tag") && event.target.closest(".contact")) {
+      this.handleFilterTags(event);
+    } else if (
+      event.target.closest(".tag") &&
+      !event.target.closest(".contact")
+    ) {
+      this.handleToggleTag(event);
+    }
   }
 
   // Other handlers
   handleAddContact(event) {
     event.preventDefault();
     this.view.hideMainUI();
-    this.view.renderAddContact(this.model.getContacts(), this.model.getCurrentContact());
+    this.view.renderAddContact(
+      this.model.getContacts(),
+      this.model.getCurrentContact(),
+    );
   }
 
   handleAddTag(event) {
-    if (event.target.id !== 'tags') return;
+    if (event.target.id !== "tags") return;
 
     let tagName = event.target.value;
     let currentContact = this.model.getCurrentContact();
 
-    if (event.key === 'Enter') {
+    if (event.key === "Enter") {
       event.preventDefault();
-      let isValidTagName = !currentContact.tags.includes(tagName) && tagName.length > 0;
+      let isValidTagName =
+        !currentContact.tags.includes(tagName) && tagName.length > 0;
       if (isValidTagName) {
         this.model.addTagToContact(tagName, isValidTagName);
         this.view.renderAddTag(tagName);
-        event.target.value = '';
+        event.target.value = "";
       }
     }
   }
@@ -56,7 +66,7 @@ export default class Controller {
 
     try {
       let contacts = await this.model.fetchContacts();
-      if (!contacts) throw new Error(`Contact could not be deleted: REASON --> ${error.message}`);
+      if (!contacts) throw new Error(`Contact could not be deleted`);
 
       this.model.resetCurrentContact();
       this.view.displayMainUI(contacts);
@@ -66,18 +76,17 @@ export default class Controller {
   }
 
   async handleDeleteContact(event) {
-
     event.preventDefault();
 
-    let answer = window.confirm('Are you sure you want to delete this user?');
+    let answer = window.confirm("Are you sure you want to delete this user?");
     if (!answer) return;
-    let contactId = event.target.closest('.contact').dataset.id;
+    let contactId = event.target.closest(".contact").dataset.id;
     try {
       let deleted = await this.model.deleteContact(contactId);
       let contacts = await this.model.fetchContacts();
 
       if (!deleted) {
-        throw new Error(`Contact could not be deleted: REASON --> ${error.message}`);
+        throw new Error(`Contact could not be deleted`);
       } else {
         this.view.hideMainUI();
         this.view.displayMainUI(contacts);
@@ -90,7 +99,7 @@ export default class Controller {
   async handleEditContact(event) {
     event.preventDefault();
 
-    let contactId = event.target.closest('.contact').dataset.id;
+    let contactId = event.target.closest(".contact").dataset.id;
     this.view.hideMainUI();
 
     let currentContact = await this.model.fetchContact(contactId);
@@ -99,8 +108,8 @@ export default class Controller {
   }
 
   handleFilterTags(event) {
-    const tag = event.target.closest('.tag');
-    if (!tag || !event.target.closest('.contact')) return;
+    const tag = event.target.closest(".tag");
+    if (!tag || !event.target.closest(".contact")) return;
 
     this.model.addTagFilter(tag);
 
@@ -111,20 +120,22 @@ export default class Controller {
 
   invalidInputs(event) {
     const form = event.target;
-    const inputs = Array.from(form.querySelectorAll('form input'));
-    const tags = Array.from(form.querySelectorAll('.selected-tag'));
+    const inputs = Array.from(form.querySelectorAll("form input"));
+    const tags = Array.from(form.querySelectorAll(".selected-tag"));
 
     if (tags.length > 0) this.removeTagValidation(inputs);
 
-    let invalids = Array.from(inputs).filter(input => input.value.length === 0);
+    let invalids = Array.from(inputs).filter(
+      (input) => input.value.length === 0,
+    );
     return invalids;
   }
 
   handleSearch(event) {
-    if (event.target.id !== 'search') return;
+    if (event.target.id !== "search") return;
 
-    let contacts = document.querySelectorAll('.contact');
-    Array.from(contacts).forEach(contact => {
+    let contacts = document.querySelectorAll(".contact");
+    Array.from(contacts).forEach((contact) => {
       let validName = this.view.isSearchedFor(contact);
       this.view.hideContact(contact, !validName);
     });
@@ -137,11 +148,11 @@ export default class Controller {
     if (invalid.length > 0) {
       this.view.displayError(invalid);
       return;
-    };
+    }
 
     const currentContact = this.model.getCurrentContact();
-    const formData = new FormData(document.querySelector('form'));
-    formData.set('tags', currentContact.tags.join(','));
+    const formData = new FormData(document.querySelector("form"));
+    formData.set("tags", currentContact.tags.join(","));
 
     const reqBody = new URLSearchParams(formData).toString();
 
@@ -150,7 +161,7 @@ export default class Controller {
       let contacts = await this.model.fetchContacts();
 
       if (!submitted) {
-        throw new Error(`Contact could not be saved: REASON --> ${error.message}`);
+        throw new Error(`Contact could not be saved`);
       } else {
         this.view.hideAddContact();
         this.view.displayMainUI(contacts);
@@ -162,23 +173,23 @@ export default class Controller {
   }
 
   handleToggleTag(event) {
-    let tag = event.target.closest('.tag');
+    let tag = event.target.closest(".tag");
     let currentContact = this.model.getCurrentContact();
 
     if (!tag || !currentContact) return;
 
     event.preventDefault();
-   
-    if (event.pointerId === -1) return;
-    let addTag = !currentContact.tags.includes(tag.id)
 
-    if (addTag) this.model.addTagToContact(tag.id); 
+    if (event.pointerId === -1) return;
+    let addTag = !currentContact.tags.includes(tag.id);
+
+    if (addTag) this.model.addTagToContact(tag.id);
     else this.model.removeTagFromContact(tag.id);
     this.view.toggleTagColor(tag, addTag);
   }
 
   removeTagValidation(inputs) {
-    const form = document.querySelector('form');
-    inputs.splice(inputs.indexOf(form.querySelector('#tags')));
+    const form = document.querySelector("form");
+    inputs.splice(inputs.indexOf(form.querySelector("#tags")));
   }
 }

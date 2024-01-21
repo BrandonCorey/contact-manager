@@ -18,23 +18,35 @@ export default class Model {
   }
 
   async deleteContact(contactId) {
-    return fetch(`/api/contacts/${contactId}`, { method: 'DELETE' })
-      .then(res => res.ok ? true : false)
-      .catch(error => error);
+    return fetch(`/api/contacts/${contactId}`, { method: "DELETE" })
+      .then((res) => (res.ok ? true : false))
+      .catch((error) => error);
   }
 
   async fetchContact(contactId) {
-    return fetch(`/api/contacts/${contactId}`, { method: 'GET' })
-      .then(res => res.json())
-      .then(contact => this.currentContact = this.processContacts([contact])[0])
-      .catch((error) => new Error(`Contact could not be fetched: REASON --> ${error.message}`));
+    return fetch(`/api/contacts/${contactId}`, { method: "GET" })
+      .then((res) => res.json())
+      .then(
+        (contact) => (this.currentContact = this.processContacts([contact])[0]),
+      )
+      .catch(
+        (error) =>
+          new Error(
+            `Contact could not be fetched: REASON --> ${error.message}`,
+          ),
+      );
   }
 
   async fetchContacts() {
-    return fetch('/api/contacts', { method: 'GET' })
-      .then(res => res.json())
-      .then(contacts => this.contacts = this.processContacts(contacts))
-      .catch((error) => new Error(`Contacts could not be fetched: REASON --> ${error.message}`));
+    return fetch("/api/contacts", { method: "GET" })
+      .then((res) => res.json())
+      .then((contacts) => (this.contacts = this.processContacts(contacts)))
+      .catch(
+        (error) =>
+          new Error(
+            `Contacts could not be fetched: REASON --> ${error.message}`,
+          ),
+      );
   }
 
   getContacts() {
@@ -50,23 +62,26 @@ export default class Model {
   }
 
   processContacts(contacts) {
-    return Array.from(contacts).map(contact => {
+    return Array.from(contacts).map((contact) => {
       return {
         id: contact.id,
         full_name: contact.full_name,
         email: contact.email,
         phone_number: contact.phone_number,
-        tags: contact.tags.split(',')
-      }
+        tags: contact.tags.split(","),
+      };
     });
   }
 
   removeTagFromContact(tagName) {
-    this.currentContact.tags.splice(this.currentContact.tags.indexOf(tagName), 1);
+    this.currentContact.tags.splice(
+      this.currentContact.tags.indexOf(tagName),
+      1,
+    );
   }
 
   resetCurrentContact() {
-    this.currentContact = { tags: [] }
+    this.currentContact = { tags: [] };
   }
 
   async submitContact(qs) {
@@ -75,19 +90,20 @@ export default class Model {
 
     if (this.currentContact.id) {
       path = `/api/contacts/${this.currentContact.id}`;
-      method = 'PUT'
+      method = "PUT";
     } else {
-      path = '/api/contacts';
-      method = 'POST';
+      path = "/api/contacts";
+      method = "POST";
     }
 
     return fetch(path, {
       method,
       body: qs,
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
+        "Content-Type": "application/x-www-form-urlencoded",
       },
-    }).catch(res => res.ok ? true : false)
-      .then(error => error);
+    })
+      .catch((res) => (res.ok ? true : false))
+      .then((error) => error);
   }
 }
