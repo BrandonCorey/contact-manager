@@ -1,6 +1,5 @@
 export default class Model {
   constructor() {
-    this.currentUser = "";
     this.contacts = [];
     this.resetCurrentContact();
     this.currentTagFilters = [];
@@ -27,12 +26,14 @@ export default class Model {
       },
     })
       .then((res) => res.json())
-      .then((res) =>
-        res.currentUser
-          ? (this.currentUser = res.currentUser)
-          : (res.currentUser = ""),
-      )
-      .then(() => (this.currentUser ? true : false))
+      .then((res) => {
+        if (res.username) {
+          window.localStorage.setItem("currentUser", res);
+          return true;
+        }
+
+        return false;
+      })
       .catch((error) => console.error(error));
   }
 
@@ -125,4 +126,12 @@ export default class Model {
       .then((res) => (res.ok ? true : false))
       .catch((error) => error);
   }
+
+  isLoggedIn() {
+    return window.localStorage.getItem("currentUser") ? true : false;
+  }
+}
+
+function parseToken() {
+  return `Bearer ${window.localStorage.getItem("currentUser").username}`;
 }

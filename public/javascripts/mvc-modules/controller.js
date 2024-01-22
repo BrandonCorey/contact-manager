@@ -154,6 +154,8 @@ export default class Controller {
   async handleLogin(event) {
     event.preventDefault();
 
+    if (this.model.isLoggedIn()) return;
+
     const form = event.target;
     if (form.getAttribute("action") !== "/api/login") return;
 
@@ -166,13 +168,13 @@ export default class Controller {
     const reqBody = new URLSearchParams(formData).toString();
 
     try {
-      let loggedIn = await this.model.login(reqBody);
-      let contacts = await this.model.fetchContacts();
+      await this.model.login(reqBody);
 
-      if (!loggedIn) {
+      if (!this.model.isLoggedIn()) {
         this.view.hideLogin();
         this.view.displayLogin("Could not authenticate user...");
       } else {
+        let contacts = await this.model.fetchContacts();
         this.view.hideLogin();
         this.view.displayMainUI(contacts);
       }

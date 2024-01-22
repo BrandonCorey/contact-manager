@@ -1,6 +1,6 @@
 export default class View {
-  constructor(contacts, currentUser) {
-    if (currentUser) {
+  constructor(contacts, loggedIn) {
+    if (loggedIn) {
       this.displayMainUI(contacts);
     } else {
       this.displayLogin();

@@ -4,7 +4,7 @@ const path = require("path");
 const contactManager = require("./lib/contact_manager");
 const PgService = require("./lib/pg-service");
 const helpers = require("./lib/helpers");
-const { use } = require("chai");
+const jwt = require("jsonwebtoken");
 
 const app = express();
 
@@ -50,16 +50,20 @@ app.post("/api/contacts", (req, res) => {
 
 app.post("/api/login", async (req, res) => {
   const postgres = new PgService();
-  let { username, password } = req.body;
-  let authenticated = await postgres.authenticate(username, password);
+  const { username, password } = req.body;
+  const authenticated = await postgres.auth(username, password);
 
   if (!authenticated) {
-    return res.send({ error: "Could not authenticate user" });
+    return res.status(401).send({ error: "Could not authenticate user" });
   }
 
-  return res.status(200).send({
-    currentUser: username,
+  const tokenConfig = { username };
+
+  const token = jwt.sign(tokenConfig, process.env.SECRET, {
+    expiresIn: 60 * 60 * 24,
   });
+
+  return res.status(200).send({ username, token });
 });
 
 app.put("/api/contacts/:id", (req, res) => {
