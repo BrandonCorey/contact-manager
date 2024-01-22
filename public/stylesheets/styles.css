@@ -15,8 +15,8 @@ body {
 header {
   color: white;
   text-align: center;
-  background-color: #111c2f; /* Darker background color */
-  background-image: linear-gradient(to bottom, #111c2f 0, #233140 100%);
+  background-color: #6f5499;
+  background-image: linear-gradient(to bottom,#563d7c 0,#6f5499 100%);
   padding: 1.5rem;
 }
 
@@ -44,7 +44,7 @@ header p {
 }
 
 .btn {
-  color: #111c2f;
+  color: #675a81;
   text-decoration: none;
   font-size: 18px;
   cursor: pointer;
@@ -56,7 +56,7 @@ header p {
 
 .btn:hover {
   color: white;
-  background-color: #111c2f;
+  background-color: #675a81;
 }
 
 #tool-bar input {
@@ -131,7 +131,7 @@ footer {
 }
 
 .form-style h2 {
-  color: #111c2f;
+  color: #675a81;
   text-align: center;
   margin: 0 auto;
   margin-bottom: 2rem;
@@ -236,6 +236,6 @@ footer {
 }
 
 .tags-section li.selected-tag {
-  background-color: #36485a;
+  background-color: #563d7c;
   color: white;
 }
