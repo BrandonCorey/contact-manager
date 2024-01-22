@@ -1,5 +1,6 @@
 export default class Model {
   constructor() {
+    this.currentUser = "";
     this.contacts = [];
     this.resetCurrentContact();
     this.currentTagFilters = [];
@@ -15,6 +16,24 @@ export default class Model {
 
   addTagToContact(tagName) {
     this.currentContact.tags.push(tagName);
+  }
+
+  async login(qs) {
+    return fetch("/api/login", {
+      method: "POST",
+      body: qs,
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+    })
+      .then((res) => res.json())
+      .then((res) => {
+        return res.currentUser
+          ? (this.currentUser = res.currentUser)
+          : (res.currentUser = "");
+      })
+      .then(() => (this.currentUser ? true : false))
+      .then((error) => error);
   }
 
   async deleteContact(contactId) {
@@ -103,7 +122,7 @@ export default class Model {
         "Content-Type": "application/x-www-form-urlencoded",
       },
     })
-      .catch((res) => (res.ok ? true : false))
-      .then((error) => error);
+      .then((res) => (res.ok ? true : false))
+      .catch((error) => error);
   }
 }

@@ -130,7 +130,7 @@ footer {
   font-size: 14px;
 }
 
-#add-contact h2 {
+.form-style h2 {
   color: #675a81;
   text-align: center;
   margin: 0 auto;
@@ -140,49 +140,49 @@ footer {
   width: 1200px;
 }
 
-#add-contact {
+.form-style {
   margin: 0 auto;
   padding: 2rem 0;
   width: 1200px;
 }
 
-#add-contact form {
+.form-style form {
   margin: 0 auto;
   width: 700px;
 }
 
-#add-contact form div {
+.form-style form div {
  display: grid;
  grid-template-columns: .25fr .75fr;
  margin-bottom: 2rem;
  height: 35px;
 }
 
-#add-contact form div span {
+.form-style form div span {
   grid-column: 2 / 2; /* This spans the span element across both columns */
   color: red;
   font-size: 14px;
   margin: 0.25rem 0 0 0;
 }
 
-#add-contact form div ul {
+.form-style form div ul {
   grid-column: 2 / 2; /* This spans the span element across both columns */
   font-size: 14px;
 }
 
-#add-contact form div input {
+.form-style form div input {
   border-radius: 5px;
   border: 1px solid black;
   padding: 0.5rem;
   font-size: 16px;
 }
 
-#add-contact form div label {
+.form-style form div label {
   font-size: 16px;
   font-weight: bold;
 }
 
-#add-contact form fieldset {
+.form-style form fieldset {
   border: none;
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -192,7 +192,7 @@ footer {
   margin-top: 4rem;
 }
 
-#add-contact input:focus {
+.form-style input:focus {
   box-shadow: 0px 0px 8px lightblue;
   transition: box-shadow ease-in-out 0.1s;
   outline: none;

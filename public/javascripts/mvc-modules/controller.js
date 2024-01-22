@@ -7,7 +7,8 @@ export default class Controller {
 
   bind() {
     document.addEventListener("click", this.handleContactActions.bind(this));
-    document.addEventListener("submit", this.handleSubmission.bind(this));
+    document.addEventListener("submit", this.handleSubmitContact.bind(this));
+    document.addEventListener("submit", this.handleLogin.bind(this));
     document.addEventListener("keyup", this.handleSearch.bind(this));
     document.addEventListener("click", this.handleTagActions.bind(this));
     document.addEventListener("keydown", this.handleAddTag.bind(this));
@@ -15,10 +16,19 @@ export default class Controller {
 
   // Aggregated handlers
   handleContactActions(event) {
-    if (event.target.id === "add") this.handleAddContact(event);
+    const actions = ["add", "delete", "edit", "cancel"];
+    if (this.model.currentUser === "" && actions.includes(event.target.id)) {
+      this.handleNotLoggedIn(event);
+    } else if (event.target.id === "add") this.handleAddContact(event);
     else if (event.target.id === "delete") this.handleDeleteContact(event);
     else if (event.target.id === "edit") this.handleEditContact(event);
     else if (event.target.id === "cancel") this.handleCancelContact(event);
+  }
+
+  handleNotLoggedIn(event) {
+    event.preventDefault();
+    this.view.hideMainUI();
+    this.view.displayLogin();
   }
 
   handleTagActions(event) {
@@ -120,7 +130,7 @@ export default class Controller {
 
   invalidInputs(event) {
     const form = event.target;
-    const inputs = Array.from(form.querySelectorAll("form input"));
+    const inputs = Array.from(form.querySelectorAll("input"));
     const tags = Array.from(form.querySelectorAll(".selected-tag"));
 
     if (tags.length > 0) this.removeTagValidation(inputs);
@@ -141,8 +151,42 @@ export default class Controller {
     });
   }
 
-  async handleSubmission(event) {
+  async handleLogin(event) {
     event.preventDefault();
+
+    const form = event.target;
+    if (form.getAttribute("action") !== "/api/login") return;
+
+    const invalid = this.invalidInputs(event);
+    if (invalid.length > 0) {
+      this.view.displayError(invalid);
+      return;
+    }
+    const formData = new FormData(form);
+    const reqBody = new URLSearchParams(formData).toString();
+
+    try {
+      let loggedIn = await this.model.login(reqBody);
+      let contacts = await this.model.fetchContacts();
+
+      if (!loggedIn) return;
+      this.view.hideLogin();
+      this.view.displayMainUI(contacts);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  async handleSubmitContact(event) {
+    event.preventDefault();
+
+    const form = event.target;
+    if (form.getAttribute("action") !== "/api/contacts") return;
+
+    if (this.model.currentUser === "") {
+      this.handleNotLoggedIn(event);
+      return;
+    }
 
     const invalid = this.invalidInputs(event);
     if (invalid.length > 0) {
@@ -151,7 +195,7 @@ export default class Controller {
     }
 
     const currentContact = this.model.getCurrentContact();
-    const formData = new FormData(document.querySelector("form"));
+    const formData = new FormData(form);
     formData.set("tags", currentContact.tags.join(","));
 
     const reqBody = new URLSearchParams(formData).toString();

@@ -25,8 +25,27 @@
       target=_blank>Brandon Corey</a>
   </footer>
 </body>
+<script id="login-template" type="text/x-handlebars">
+  <div id="login" class="form-style">
+  <h2>{{message}}</h2>
+    <form action="/api/login" method="post" novalidate>
+      <div>
+        <label for="username">Username:</label>
+        <input required id="username" name="username" type="text">
+        <span class="hide">Please enter a username.</span>
+      </div>
+      <div>
+        <label for="password">Password:</label>
+        <input required id="password" name="password" type="text">
+        <span class="hide">Please enter a password.</span>
+      </div>
+      <fieldset class="actions">
+      <button class="btn" type="submit">Submit</button>
+    </form>
+  </div>
+</script>
 <script id="add-contact-template" type="text/x-handlebars">
-  <div id="add-contact">
+  <div id="add-contact" class="form-style">
     <h2>Contact info</h2>
     <form action="/api/contacts" method="post" novalidate>
       <div>
