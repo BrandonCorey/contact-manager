@@ -27,13 +27,13 @@ export default class Model {
       },
     })
       .then((res) => res.json())
-      .then((res) => {
-        return res.currentUser
+      .then((res) =>
+        res.currentUser
           ? (this.currentUser = res.currentUser)
-          : (res.currentUser = "");
-      })
+          : (res.currentUser = ""),
+      )
       .then(() => (this.currentUser ? true : false))
-      .then((error) => error);
+      .catch((error) => console.error(error));
   }
 
   async deleteContact(contactId) {

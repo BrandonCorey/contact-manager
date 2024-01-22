@@ -169,9 +169,13 @@ export default class Controller {
       let loggedIn = await this.model.login(reqBody);
       let contacts = await this.model.fetchContacts();
 
-      if (!loggedIn) return;
-      this.view.hideLogin();
-      this.view.displayMainUI(contacts);
+      if (!loggedIn) {
+        this.view.hideLogin();
+        this.view.displayLogin("Could not authenticate user...");
+      } else {
+        this.view.hideLogin();
+        this.view.displayMainUI(contacts);
+      }
     } catch (error) {
       console.error(error);
     }

@@ -53,13 +53,13 @@ app.post("/api/login", async (req, res) => {
   let { username, password } = req.body;
   let authenticated = await postgres.authenticate(username, password);
 
-  if (authenticated) {
-    return res.status(200).send({
-      currentUser: username,
-    });
-  } else {
+  if (!authenticated) {
     return res.send({ error: "Could not authenticate user" });
   }
+
+  return res.status(200).send({
+    currentUser: username,
+  });
 });
 
 app.put("/api/contacts/:id", (req, res) => {
