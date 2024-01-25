@@ -1,11 +1,5 @@
 const { Client } = require("pg");
-
-const CONNECTION = {
-  host: process.env.POSTGRES_HOST,
-  database: process.env.POSTGRES_DB,
-  user: process.env.POSTGRES_USER,
-  port: process.env.POSTGRES_PORT,
-};
+const { PG_CONNECTION } = require("./config");
 
 const logQuery = (statement, params) => {
   let timestamp = new Date();
@@ -14,7 +8,7 @@ const logQuery = (statement, params) => {
 };
 
 const dbQuery = async (statement, ...params) => {
-  let client = new Client(CONNECTION);
+  let client = new Client(PG_CONNECTION);
 
   await client.connect();
   logQuery(statement, params);

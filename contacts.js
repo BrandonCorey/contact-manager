@@ -1,12 +1,11 @@
-require("dotenv").config();
 const express = require("express");
 const bodyParser = require("body-parser");
 const path = require("path");
 const contactManager = require("./lib/contact-service");
 const PgService = require("./lib/pg-service");
-const helpers = require("./lib/helpers");
+const helpers = require("./utils/helpers");
 const jwt = require("jsonwebtoken");
-
+const { PORT } = require("./utils/config");
 const app = express();
 
 // app.use((req, res, next) => {
@@ -20,7 +19,7 @@ const app = express();
 //   next();
 // });
 
-app.set("port", process.env.PORT || 3000);
+app.set("port", process.env.PORT || PORT);
 
 app.use("/", express.static(path.join(__dirname, "public")));
 app.use(bodyParser.json());
