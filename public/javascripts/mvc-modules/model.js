@@ -1,6 +1,7 @@
 export default class Model {
   constructor() {
     this.contacts = [];
+    this.currentContact = null;
     this.resetCurrentContact();
     this.currentTagFilters = [];
   }
@@ -88,7 +89,7 @@ export default class Model {
         full_name: contact.full_name,
         email: contact.email,
         phone_number: contact.phone_number,
-        tags: contact.tags.split(","),
+        tags: contact.tags,
       };
     });
   }

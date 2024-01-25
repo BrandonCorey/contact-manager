@@ -4,20 +4,27 @@
     "full_name": "Naveed Fida",
     "email": "navida@gmail.com",
     "phone_number": "508-121-1123",
-    "tags": "Launch School"
+    "tags": [
+      "Launch School"
+    ]
   },
   {
     "id": 3,
     "full_name": "Pete Hanson",
     "email": "ph@example.com",
     "phone_number": "54321098761",
-    "tags": "Launch School,TA"
+    "tags": [
+      "Launch School",
+      "TA"
+    ]
   },
   {
     "full_name": "Brandon Mitchell Corey",
     "phone_number": "123456789",
     "email": "bcorey3660@gmail.com",
-    "tags": "Launch School",
+    "tags": [
+      "Launch School"
+    ],
     "id": 4
   }
 ]

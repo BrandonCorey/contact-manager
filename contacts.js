@@ -1,7 +1,8 @@
+require("dotenv").config();
 const express = require("express");
 const bodyParser = require("body-parser");
 const path = require("path");
-const contactManager = require("./lib/contact_manager");
+const contactManager = require("./lib/contact-service");
 const PgService = require("./lib/pg-service");
 const helpers = require("./lib/helpers");
 const jwt = require("jsonwebtoken");
@@ -25,26 +26,40 @@ app.use("/", express.static(path.join(__dirname, "public")));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.get("/api/contacts", (_, res) => {
-  res.json(contactManager.getAll());
-});
-
-app.get("/api/contacts/:id", (req, res) => {
-  let contact = contactManager.get(req.params["id"]);
-  if (contact) {
-    res.json(contact);
-  } else {
-    res.status(404).end();
+app.get("/api/contacts", async (_, res) => {
+  try {
+    const contacts = await contactManager.getAll();
+    res.status(200).json(contacts);
+  } catch (error) {
+    console.error(error);
   }
 });
 
-app.post("/api/contacts", (req, res) => {
-  let contactAttrs = helpers.extractContactAttrs(req.body);
-  let contact = contactManager.add(contactAttrs);
-  if (contact) {
-    res.status(201).json(contact);
-  } else {
-    res.status(400).end();
+app.get("/api/contacts/:id", async (req, res) => {
+  try {
+    const contact = await contactManager.get(req.params.id);
+    if (contact) {
+      res.json(contact);
+    } else {
+      res.status(404).end();
+    }
+  } catch (error) {
+    console.error(error);
+  }
+});
+
+app.post("/api/contacts", async (req, res) => {
+  try {
+    const contactAttrs = helpers.extractContactAttrs(req.body);
+    const contact = await contactManager.add(contactAttrs);
+
+    if (contact) {
+      res.status(201).json(contact);
+    } else {
+      res.status(400).end();
+    }
+  } catch (error) {
+    console.error(error);
   }
 });
 
@@ -66,21 +81,30 @@ app.post("/api/login", async (req, res) => {
   return res.status(200).send({ username, token });
 });
 
-app.put("/api/contacts/:id", (req, res) => {
-  let contactAttrs = helpers.extractContactAttrs(req.body);
-  let contact = contactManager.update(req.params["id"], contactAttrs);
-  if (contact) {
-    res.status(201).json(contact);
-  } else {
-    res.status(400).end();
+app.put("/api/contacts/:id", async (req, res) => {
+  try {
+    let contactAttrs = helpers.extractContactAttrs(req.body);
+    let contact = await contactManager.update(req.params["id"], contactAttrs);
+    if (contact) {
+      res.status(201).json(contact);
+    } else {
+      res.status(400).end();
+    }
+  } catch (error) {
+    console.error(error);
   }
 });
 
-app.delete("/api/contacts/:id", (req, res) => {
-  if (contactManager.remove(req.params["id"])) {
-    res.status(204).end();
-  } else {
-    res.status(400).end();
+app.delete("/api/contacts/:id", async (req, res) => {
+  try {
+    const removed = await contactManager.remove(req.params["id"]);
+    if (removed) {
+      res.status(204).end();
+    } else {
+      res.status(400).end();
+    }
+  } catch (error) {
+    console.error(error);
   }
 });
 
