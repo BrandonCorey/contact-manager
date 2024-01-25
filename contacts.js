@@ -8,33 +8,42 @@ const jwt = require("jsonwebtoken");
 const { PORT } = require("./utils/config");
 const app = express();
 
-// app.use((req, res, next) => {
-//   const authorization = req.header("authorization");
-//   if (!(authorization && authorization.startsWith("Bearer "))) {
-//     res.send({
-//       currentUser: "",
-//     });
-//   }
-//
-//   next();
-// });
-
 app.set("port", process.env.PORT || PORT);
 
 app.use("/", express.static(path.join(__dirname, "public")));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.get("/api/contacts", async (_, res) => {
+const contactsAPI = express.Router();
+app.use("/api/contacts", contactsAPI);
+
+contactsAPI.use((req, res, next) => {
+  const token = helpers.getTokenFrom(req);
+
+  if (!token) {
+    res.status(401).send({ error: "Error: Credentials invalid" });
+  }
+
+  const decoded = jwt.verify(token, process.env.SECRET);
+  if (!decoded) {
+    res.status(401).send({ error: "Error: Credentials invalid" });
+  }
+
+  req.username = decoded.username;
+  next();
+});
+
+contactsAPI.get("/", async (req, res) => {
   try {
-    const contacts = await contactManager.getAll();
+    let contacts = await contactManager.getAll();
+    contacts = contacts.filter(({ username }) => username === req.username);
     res.status(200).json(contacts);
   } catch (error) {
     console.error(error);
   }
 });
 
-app.get("/api/contacts/:id", async (req, res) => {
+contactsAPI.get("/:id", async (req, res) => {
   try {
     const contact = await contactManager.get(req.params.id);
     if (contact) {
@@ -47,7 +56,7 @@ app.get("/api/contacts/:id", async (req, res) => {
   }
 });
 
-app.post("/api/contacts", async (req, res) => {
+contactsAPI.post("/", async (req, res) => {
   try {
     const contactAttrs = helpers.extractContactAttrs(req.body);
     const contact = await contactManager.add(contactAttrs);
@@ -62,7 +71,7 @@ app.post("/api/contacts", async (req, res) => {
   }
 });
 
-app.post("/api/login", async (req, res) => {
+app.post("/login", async (req, res) => {
   const postgres = new PgService();
   const { username, password } = req.body;
   const authenticated = await postgres.auth(username, password);
@@ -77,10 +86,10 @@ app.post("/api/login", async (req, res) => {
     expiresIn: 60 * 60 * 24,
   });
 
-  return res.status(200).send({ username, token });
+  return res.status(200).send({ token, username });
 });
 
-app.put("/api/contacts/:id", async (req, res) => {
+contactsAPI.put("/:id", async (req, res) => {
   try {
     let contactAttrs = helpers.extractContactAttrs(req.body);
     let contact = await contactManager.update(req.params["id"], contactAttrs);
@@ -94,7 +103,7 @@ app.put("/api/contacts/:id", async (req, res) => {
   }
 });
 
-app.delete("/api/contacts/:id", async (req, res) => {
+contactsAPI.delete("/:id", async (req, res) => {
   try {
     const removed = await contactManager.remove(req.params["id"]);
     if (removed) {

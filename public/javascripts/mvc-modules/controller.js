@@ -189,11 +189,6 @@ export default class Controller {
     const form = event.target;
     if (form.getAttribute("action") !== "/api/contacts") return;
 
-    if (this.model.currentUser === "") {
-      this.handleNotLoggedIn(event);
-      return;
-    }
-
     const invalid = this.invalidInputs(event);
     if (invalid.length > 0) {
       this.view.displayError(invalid);
@@ -203,6 +198,7 @@ export default class Controller {
     const currentContact = this.model.getCurrentContact();
     const formData = new FormData(form);
     formData.set("tags", currentContact.tags.join(","));
+    formData.set("username", window.localStorage.getItem("currentUsername"));
 
     const reqBody = new URLSearchParams(formData).toString();
 

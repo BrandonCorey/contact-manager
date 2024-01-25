@@ -1,4 +1,10 @@
-const CONTACT_ATTRS = ["full_name", "phone_number", "email", "tags"];
+const CONTACT_ATTRS = [
+  "full_name",
+  "phone_number",
+  "email",
+  "tags",
+  "username",
+];
 
 module.exports = {
   extractContactAttrs: function (body) {
@@ -11,5 +17,13 @@ module.exports = {
     });
 
     return returnObj;
+  },
+
+  getTokenFrom: function (request) {
+    const authorization = request.get("Authorization");
+    if (authorization && authorization.startsWith("Bearer ")) {
+      return authorization.replace("Bearer ", "");
+    }
+    return null;
   },
 };

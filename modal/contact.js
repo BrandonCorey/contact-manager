@@ -17,6 +17,11 @@ const contactSchema = mongoose.Schema({
   },
 
   tags: [{ type: String }],
+
+  username: {
+    type: String,
+    required: true,
+  },
 });
 
 contactSchema.set("toJSON", {

@@ -19,7 +19,7 @@ export default class Model {
   }
 
   async login(qs) {
-    return fetch("/api/login", {
+    return fetch("/login", {
       method: "POST",
       body: qs,
       headers: {
@@ -28,8 +28,9 @@ export default class Model {
     })
       .then((res) => res.json())
       .then((res) => {
-        if (res.username) {
-          window.localStorage.setItem("currentUser", res);
+        if (res) {
+          window.localStorage.setItem("currentUser", res.token);
+          window.localStorage.setItem("currentUsername", res.username);
           return true;
         }
 
@@ -39,13 +40,21 @@ export default class Model {
   }
 
   async deleteContact(contactId) {
-    return fetch(`/api/contacts/${contactId}`, { method: "DELETE" })
+    return fetch(`/api/contacts/${contactId}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: parseToken(),
+      },
+    })
       .then((res) => (res.ok ? true : false))
       .catch((error) => error);
   }
 
   async fetchContact(contactId) {
-    return fetch(`/api/contacts/${contactId}`, { method: "GET" })
+    return fetch(`/api/contacts/${contactId}`, {
+      method: "GET",
+      headers: { Authorization: parseToken() },
+    })
       .then((res) => res.json())
       .then(
         (contact) => (this.currentContact = this.processContacts([contact])[0]),
@@ -59,7 +68,10 @@ export default class Model {
   }
 
   async fetchContacts() {
-    return fetch("/api/contacts", { method: "GET" })
+    return fetch("/api/contacts", {
+      method: "GET",
+      headers: { Authorization: parseToken() },
+    })
       .then((res) => res.json())
       .then((contacts) => (this.contacts = this.processContacts(contacts)))
       .catch(
@@ -122,6 +134,7 @@ export default class Model {
       body: qs,
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
+        Authorization: parseToken(),
       },
     })
       .then((res) => (res.ok ? true : false))
@@ -134,5 +147,6 @@ export default class Model {
 }
 
 function parseToken() {
-  return `Bearer ${window.localStorage.getItem("currentUser").username}`;
+  if (!window.localStorage.getItem("currentUser")) return;
+  return `Bearer ${window.localStorage.getItem("currentUser")}`;
 }
