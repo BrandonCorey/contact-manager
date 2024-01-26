@@ -4,6 +4,10 @@ export default class Model {
     this.currentContact = null;
     this.resetCurrentContact();
     this.currentTagFilters = [];
+
+    if (this.isLoggedIn()) {
+      this.initView();
+    }
   }
 
   addTagFilter(tag) {
@@ -19,7 +23,7 @@ export default class Model {
   }
 
   async login(qs) {
-    return fetch("/login", {
+    return fetch("/api/login", {
       method: "POST",
       body: qs,
       headers: {
@@ -28,7 +32,7 @@ export default class Model {
     })
       .then((res) => res.json())
       .then((res) => {
-        if (res) {
+        if (!res.error) {
           window.localStorage.setItem("currentUser", res.token);
           window.localStorage.setItem("currentUsername", res.username);
           return true;
@@ -138,7 +142,15 @@ export default class Model {
       },
     })
       .then((res) => (res.ok ? true : false))
-      .catch((error) => error);
+      .catch((error) => console.error(error));
+  }
+
+  async initView() {
+    try {
+      await this.fetchContacts();
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   isLoggedIn() {

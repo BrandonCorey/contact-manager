@@ -71,7 +71,7 @@ contactsAPI.post("/", async (req, res) => {
   }
 });
 
-app.post("/login", async (req, res) => {
+app.post("/api/login", async (req, res) => {
   const postgres = new PgService();
   const { username, password } = req.body;
   const authenticated = await postgres.auth(username, password);
