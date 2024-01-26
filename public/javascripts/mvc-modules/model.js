@@ -4,10 +4,6 @@ export default class Model {
     this.currentContact = null;
     this.resetCurrentContact();
     this.currentTagFilters = [];
-
-    if (this.isLoggedIn()) {
-      this.initView();
-    }
   }
 
   addTagFilter(tag) {
@@ -143,14 +139,6 @@ export default class Model {
     })
       .then((res) => (res.ok ? true : false))
       .catch((error) => console.error(error));
-  }
-
-  async initView() {
-    try {
-      await this.fetchContacts();
-    } catch (error) {
-      console.error(error);
-    }
   }
 
   isLoggedIn() {

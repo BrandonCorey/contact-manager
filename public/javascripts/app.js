@@ -7,7 +7,13 @@ import Controller from "./mvc-modules/controller.js";
     init() {
       document.addEventListener("DOMContentLoaded", async () => {
         const model = new Model();
-        const view = new View(model.getContacts(), model.isLoggedIn());
+        let contacts;
+        let loggedIn = model.isLoggedIn();
+
+        if (loggedIn) {
+          contacts = await model.fetchContacts();
+        }
+        const view = new View(contacts, loggedIn);
         new Controller(model, view);
       });
     }
